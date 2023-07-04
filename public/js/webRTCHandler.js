@@ -1,5 +1,14 @@
+import * as wss from "./wss.js";
+
 export const sendPreOffer = (callType, callePersonalCode) => {
-  console.log("preoffer function excuted");
-  console.log(callType);
-  console.log(callePersonalCode);
+  const data = {
+    callType,
+    callePersonalCode,
+  };
+  wss.sendPreOffer(data);
+};
+
+export const handlePreOffer = (data) => {
+  console.log("pre offer came");
+  console.log(data);
 };
