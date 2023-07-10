@@ -1,10 +1,13 @@
+import * as constants from "./constants.js";
+
 let state = {
   socketId: null,
   localStream: null,
   remoteStream: null,
-  screenSharingStram: null,
-  allowConnectionFromStrangers: false,
   screenSharingActive: false,
+  screenSharingStream: null,
+  allowConnectionsFromStrangers: false,
+  callState: constants.callState.CALL_AVAILABLE_ONLY_CHAT,
 };
 
 export const setSocketId = (socketId) => {
@@ -22,10 +25,10 @@ export const setLocalStream = (stream) => {
   };
 };
 
-export const setallowConnectionFromStrangers = (allowConnection) => {
+export const setAllowConnectionsFromStrangers = (allowConnection) => {
   state = {
     ...state,
-    allowConnectionFromStrangers: allowConnection,
+    allowConnectionsFromStrangers: allowConnection,
   };
 };
 
@@ -36,10 +39,10 @@ export const setScreenSharingActive = (screenSharingActive) => {
   };
 };
 
-export const setScreenSharingStram = (stream) => {
+export const setScreenSharingStream = (stream) => {
   state = {
     ...state,
-    screenSharingStram: stream,
+    screenSharingStream: stream,
   };
 };
 
@@ -47,6 +50,13 @@ export const setRemoteStream = (stream) => {
   state = {
     ...state,
     remoteStream: stream,
+  };
+};
+
+export const setCallState = (callState) => {
+  state = {
+    ...state,
+    callState,
   };
 };
 
