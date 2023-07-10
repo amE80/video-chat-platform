@@ -14,6 +14,7 @@ app.get("/", (req, res) => {
 });
 
 let connectedPeers = [];
+let connectedPeersStranger = [];
 
 io.on("connection", (socket) => {
   connectedPeers.push(socket.id);
@@ -78,6 +79,41 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("stranger-connection-status", (data) => {
+    const { status } = data;
+    if (status) {
+      connectedPeersStranger.push(socket.id);
+    } else {
+      const newConnectedPeersStrangers = connectedPeersStranger.filter(
+        (peerSocketId) => peerSocketId !== socket.id
+      );
+
+      connectedPeersStranger = newConnectedPeersStrangers;
+    }
+
+    console.log(connectedPeersStranger);
+  });
+
+  socket.on("get-stranger-socket-id", () => {
+    let randomStrangerSocketId;
+    const filterdConnectedPeersStrangers = connectedPeersStranger.filter(
+      (peerSocketId) => peerSocketId !== socket.id
+    );
+
+    if (filterdConnectedPeersStrangers.length > 0) {
+      randomStrangerSocketId =
+        filterdConnectedPeersStrangers[
+          Math.floor(Math.random() * filterdConnectedPeersStrangers.length)
+        ];
+    } else {
+      randomStrangerSocketId = null;
+    }
+    const data = {
+      randomStrangerSocketId,
+    };
+    io.to(socket.id).emit("stranger-socket-id", data);
+  });
+
   socket.on("disconnect", () => {
     console.log("user disconnected");
 
@@ -86,7 +122,11 @@ io.on("connection", (socket) => {
     );
 
     connectedPeers = newConnectedPeers;
-    console.log(connectedPeers);
+
+    const newConnectedPeersStrangers = connectedPeersStranger.filter(
+      (peerSocketId) => peerSocketId !== socket.id
+    );
+    connectedPeersStranger = newConnectedPeersStrangers;
   });
 });
 

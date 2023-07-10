@@ -84,7 +84,8 @@ const createPeerConnection = () => {
   // add our stream to peer connection
 
   if (
-    connectedUserDetails.callType === constants.callType.VIDEO_PERSONAL_CODE
+    connectedUserDetails.callType === constants.callType.VIDEO_PERSONAL_CODE ||
+    connectedUserDetails.callType === constants.callType.VIDEO_STRANGER
   ) {
     const localStream = store.getState().localStream;
 
@@ -117,6 +118,17 @@ export const sendPreOffer = (callType, calleePersonalCode) => {
     store.setCallState(constants.callState.CALL_UNAVAILABLE);
     wss.sendPreOffer(data);
   }
+  if (
+    callType === constants.callType.CHAT_STRANGER ||
+    callType === constants.callType.VIDEO_STRANGER
+  ) {
+    const data = {
+      callType,
+      calleePersonalCode,
+    };
+    store.setCallState(constants.callState.CALL_UNAVAILABLE);
+    wss.sendPreOffer(data);
+  }
 };
 
 export const handlePreOffer = (data) => {
@@ -128,7 +140,10 @@ export const handlePreOffer = (data) => {
   };
 
   if (!checkCallPossibility()) {
-    return sendPreOfferAnswer(constants.preOfferAnswer.CALL_UNAVAILABLE);
+    return sendPreOfferAnswer(
+      constants.preOfferAnswer.CALL_UNAVAILABLE,
+      callerSocketId
+    );
   }
   store.setCallState(constants.callState.CALL_UNAVAILABLE);
 
@@ -138,6 +153,14 @@ export const handlePreOffer = (data) => {
   ) {
     console.log("showing call dialog");
     ui.showIncomingCallDialog(callType, acceptCallHandler, rejectCallHandler);
+  }
+  if (
+    callType === constants.callType.CHAT_STRANGER ||
+    callType === constants.callType.VIDEO_STRANGER
+  ) {
+    createPeerConnection();
+    sendPreOfferAnswer(constants.preOfferAnswer.CALL_ACCEPTED);
+    ui.showCallElements(connectedUserDetails.callType);
   }
 };
 
@@ -151,6 +174,7 @@ const acceptCallHandler = () => {
 const rejectCallHandler = () => {
   console.log("call rejected");
   sendPreOfferAnswer();
+  setIncomingCallsAvailable();
   sendPreOfferAnswer(constants.preOfferAnswer.CALL_REJECTED);
 };
 
@@ -162,9 +186,12 @@ const callingDialogRejectCallHandler = () => {
   wss.sendUserHangUp(data);
 };
 
-const sendPreOfferAnswer = (preOfferAnswer) => {
+const sendPreOfferAnswer = (preOfferAnswer, callerSocketId = null) => {
+  const SocketId = callerSocketId
+    ? callerSocketId
+    : connectedUserDetails.socketId;
   const data = {
-    callerSocketId: connectedUserDetails.socketId,
+    callerSocketId: SocketId,
     preOfferAnswer,
   };
   ui.removeAllDialogs();
